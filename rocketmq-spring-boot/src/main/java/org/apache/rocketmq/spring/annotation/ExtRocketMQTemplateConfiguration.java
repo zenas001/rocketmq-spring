@@ -93,9 +93,4 @@ public @interface ExtRocketMQTemplateConfiguration {
      * The namespace of producer.
      */
     String namespace() default "";
-
-    /**
-     * The property of "instanceName".
-     */
-    String instanceName() default "DEFAULT";
 }

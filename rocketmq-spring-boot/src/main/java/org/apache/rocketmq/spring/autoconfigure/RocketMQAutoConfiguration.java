@@ -55,8 +55,7 @@ import javax.annotation.PostConstruct;
 @EnableConfigurationProperties(RocketMQProperties.class)
 @ConditionalOnClass({MQAdmin.class})
 @ConditionalOnProperty(prefix = "rocketmq", value = "name-server", matchIfMissing = true)
-@Import({MessageConverterConfiguration.class, ListenerContainerConfiguration.class, ExtProducerResetConfiguration.class,
-        ExtConsumerResetConfiguration.class, RocketMQTransactionConfiguration.class})
+@Import({MessageConverterConfiguration.class, ListenerContainerConfiguration.class, ExtProducerResetConfiguration.class, ExtConsumerResetConfiguration.class, RocketMQTransactionConfiguration.class})
 @AutoConfigureAfter({MessageConverterConfiguration.class})
 @AutoConfigureBefore({RocketMQTransactionConfiguration.class})
 
@@ -64,7 +63,7 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
     private static final Logger log = LoggerFactory.getLogger(RocketMQAutoConfiguration.class);
 
     public static final String ROCKETMQ_TEMPLATE_DEFAULT_GLOBAL_NAME =
-            "rocketMQTemplate";
+        "rocketMQTemplate";
     public static final String PRODUCER_BEAN_NAME = "defaultMQProducer";
     public static final String CONSUMER_BEAN_NAME = "defaultLitePullConsumer";
 

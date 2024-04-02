@@ -37,23 +37,23 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.util.StringUtils;
 
 @Configuration
 public class ExtProducerResetConfiguration implements ApplicationContextAware, SmartInitializingSingleton {
-    private static final Logger log = LoggerFactory.getLogger(ExtProducerResetConfiguration.class);
+    private final static Logger log = LoggerFactory.getLogger(ExtProducerResetConfiguration.class);
 
     private ConfigurableApplicationContext applicationContext;
 
-    private ConfigurableEnvironment environment;
+    private StandardEnvironment environment;
 
     private RocketMQProperties rocketMQProperties;
 
     private RocketMQMessageConverter rocketMQMessageConverter;
 
     public ExtProducerResetConfiguration(RocketMQMessageConverter rocketMQMessageConverter,
-        ConfigurableEnvironment environment, RocketMQProperties rocketMQProperties) {
+        StandardEnvironment environment, RocketMQProperties rocketMQProperties) {
         this.rocketMQMessageConverter = rocketMQMessageConverter;
         this.environment = environment;
         this.rocketMQProperties = rocketMQProperties;
@@ -85,6 +85,8 @@ public class ExtProducerResetConfiguration implements ApplicationContextAware, S
         validate(annotation, genericApplicationContext);
 
         DefaultMQProducer mqProducer = createProducer(annotation);
+        // Set instanceName same as the beanName
+        mqProducer.setInstanceName(beanName);
         try {
             mqProducer.start();
         } catch (MQClientException e) {
@@ -105,15 +107,15 @@ public class ExtProducerResetConfiguration implements ApplicationContextAware, S
         }
         String nameServer = environment.resolvePlaceholders(annotation.nameServer());
         String groupName = environment.resolvePlaceholders(annotation.group());
-        groupName = !StringUtils.hasLength(groupName) ? producerConfig.getGroup() : groupName;
+        groupName = StringUtils.isEmpty(groupName) ? producerConfig.getGroup() : groupName;
 
         String ak = environment.resolvePlaceholders(annotation.accessKey());
-        ak = StringUtils.hasLength(ak) ? ak : producerConfig.getAccessKey();
+        ak = StringUtils.isEmpty(ak) ? producerConfig.getAccessKey() : ak;
         String sk = environment.resolvePlaceholders(annotation.secretKey());
-        sk = StringUtils.hasLength(sk) ? sk : producerConfig.getSecretKey();
+        sk = StringUtils.isEmpty(sk) ? producerConfig.getSecretKey() : sk;
         boolean isEnableMsgTrace = annotation.enableMsgTrace();
         String customizedTraceTopic = environment.resolvePlaceholders(annotation.customizedTraceTopic());
-        customizedTraceTopic = StringUtils.hasLength(customizedTraceTopic) ? customizedTraceTopic : producerConfig.getCustomizedTraceTopic();
+        customizedTraceTopic = StringUtils.isEmpty(customizedTraceTopic) ? producerConfig.getCustomizedTraceTopic() : customizedTraceTopic;
         //if String is not is equal "true" TLS mode will represent the as default value false
         boolean useTLS = new Boolean(environment.resolvePlaceholders(annotation.tlsEnable()));
 
@@ -127,9 +129,7 @@ public class ExtProducerResetConfiguration implements ApplicationContextAware, S
         producer.setCompressMsgBodyOverHowmuch(annotation.compressMessageBodyThreshold() == -1 ? producerConfig.getCompressMessageBodyThreshold() : annotation.compressMessageBodyThreshold());
         producer.setRetryAnotherBrokerWhenNotStoreOK(annotation.retryNextServer());
         producer.setUseTLS(useTLS);
-        String namespace = environment.resolvePlaceholders(annotation.namespace());
-        producer.setNamespace(RocketMQUtil.getNamespace(namespace, producerConfig.getNamespace()));
-        producer.setInstanceName(annotation.instanceName());
+        producer.setNamespace(annotation.namespace());
         return producer;
     }
 

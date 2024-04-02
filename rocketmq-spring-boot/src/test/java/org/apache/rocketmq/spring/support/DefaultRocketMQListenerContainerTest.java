@@ -244,7 +244,7 @@ public class DefaultRocketMQListenerContainerTest {
         container.setRocketMQMessageListener(anno);
 
         assertEquals(anno.consumeMode(), container.getConsumeMode());
-        assertEquals(anno.consumeThreadMax(), container.getConsumeThreadMax());
+        assertEquals(anno.consumeThreadNumber(), container.getConsumeThreadMax());
         assertEquals(anno.consumeThreadNumber(), container.getConsumeThreadNumber());
         assertEquals(anno.messageModel(), container.getMessageModel());
         assertEquals(anno.selectorType(), container.getSelectorType());
@@ -253,7 +253,6 @@ public class DefaultRocketMQListenerContainerTest {
         assertEquals(anno.namespace(), container.getNamespace());
         assertEquals(anno.delayLevelWhenNextConsume(), container.getDelayLevelWhenNextConsume());
         assertEquals(anno.suspendCurrentQueueTimeMillis(), container.getSuspendCurrentQueueTimeMillis());
-        assertEquals(anno.instanceName(), container.getInstanceName());
     }
 
     @RocketMQMessageListener(consumerGroup = "abc1", topic = "test",
@@ -265,8 +264,7 @@ public class DefaultRocketMQListenerContainerTest {
             tlsEnable = "tlsEnable",
             namespace = "namespace",
             delayLevelWhenNextConsume = 1234,
-            suspendCurrentQueueTimeMillis = 2345,
-            instanceName = "instanceName"
+            suspendCurrentQueueTimeMillis = 2345
     )
     class TestRocketMQMessageListener {
     }
