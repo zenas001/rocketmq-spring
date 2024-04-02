@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.rocketmq.spring.autoconfigure;
 
 import org.apache.rocketmq.client.AccessChannel;
@@ -29,6 +30,7 @@ import org.apache.rocketmq.spring.support.RocketMQUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
@@ -47,36 +49,36 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
+
 @Configuration
 @EnableConfigurationProperties(RocketMQProperties.class)
 @ConditionalOnClass({MQAdmin.class})
 @ConditionalOnProperty(prefix = "rocketmq", value = "name-server", matchIfMissing = true)
 @Import({MessageConverterConfiguration.class, ListenerContainerConfiguration.class, ExtProducerResetConfiguration.class,
-        ExtConsumerResetConfiguration.class, RocketMQTransactionConfiguration.class, RocketMQListenerConfiguration.class})
+        ExtConsumerResetConfiguration.class, RocketMQTransactionConfiguration.class})
 @AutoConfigureAfter({MessageConverterConfiguration.class})
 @AutoConfigureBefore({RocketMQTransactionConfiguration.class})
+
 public class RocketMQAutoConfiguration implements ApplicationContextAware {
     private static final Logger log = LoggerFactory.getLogger(RocketMQAutoConfiguration.class);
 
     public static final String ROCKETMQ_TEMPLATE_DEFAULT_GLOBAL_NAME =
-        "rocketMQTemplate";
+            "rocketMQTemplate";
     public static final String PRODUCER_BEAN_NAME = "defaultMQProducer";
     public static final String CONSUMER_BEAN_NAME = "defaultLitePullConsumer";
 
-    private final Environment environment;
+    @Autowired
+    private Environment environment;
 
     private ApplicationContext applicationContext;
-
-    public RocketMQAutoConfiguration(Environment environment) {
-        this.environment = environment;
-        checkProperties();
-    }
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
     }
 
+    @PostConstruct
     public void checkProperties() {
         String nameServer = environment.getProperty("rocketmq.name-server", String.class);
         log.debug("rocketmq.nameServer = {}", nameServer);
@@ -105,7 +107,7 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         DefaultMQProducer producer = RocketMQUtil.createDefaultMQProducer(groupName, ak, sk, isEnableMsgTrace, customizedTraceTopic);
 
         producer.setNamesrvAddr(nameServer);
-        if (StringUtils.hasLength(accessChannel)) {
+        if (!StringUtils.isEmpty(accessChannel)) {
             producer.setAccessChannel(AccessChannel.valueOf(accessChannel));
         }
         producer.setSendMsgTimeout(producerConfig.getSendMessageTimeout());
@@ -115,26 +117,23 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         producer.setCompressMsgBodyOverHowmuch(producerConfig.getCompressMessageBodyThreshold());
         producer.setRetryAnotherBrokerWhenNotStoreOK(producerConfig.isRetryNextServer());
         producer.setUseTLS(producerConfig.isTlsEnable());
-        if (StringUtils.hasText(producerConfig.getNamespace())) {
-            producer.setNamespace(producerConfig.getNamespace());
-        }
-        producer.setInstanceName(producerConfig.getInstanceName());
-        log.info("a producer ({}) init on namesrv {}",  groupName, nameServer);
+        producer.setNamespace(producerConfig.getNamespace());
+        producer.setHeartBeatHandler(producerConfig.getHeartBeatHandler());
         return producer;
     }
 
     @Bean(CONSUMER_BEAN_NAME)
     @ConditionalOnMissingBean(DefaultLitePullConsumer.class)
-    @ConditionalOnProperty(prefix = "rocketmq", value = {"name-server", "pull-consumer.group", "pull-consumer.topic"})
+    @ConditionalOnProperty(prefix = "rocketmq", value = {"name-server", "consumer.group", "consumer.topic"})
     public DefaultLitePullConsumer defaultLitePullConsumer(RocketMQProperties rocketMQProperties)
             throws MQClientException {
-        RocketMQProperties.PullConsumer consumerConfig = rocketMQProperties.getPullConsumer();
+        RocketMQProperties.Consumer consumerConfig = rocketMQProperties.getConsumer();
         String nameServer = rocketMQProperties.getNameServer();
         String groupName = consumerConfig.getGroup();
         String topicName = consumerConfig.getTopic();
         Assert.hasText(nameServer, "[rocketmq.name-server] must not be null");
-        Assert.hasText(groupName, "[rocketmq.pull-consumer.group] must not be null");
-        Assert.hasText(topicName, "[rocketmq.pull-consumer.topic] must not be null");
+        Assert.hasText(groupName, "[rocketmq.consumer.group] must not be null");
+        Assert.hasText(topicName, "[rocketmq.consumer.topic] must not be null");
 
         String accessChannel = rocketMQProperties.getAccessChannel();
         MessageModel messageModel = MessageModel.valueOf(consumerConfig.getMessageModel());
@@ -149,11 +148,8 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
                 groupName, topicName, messageModel, selectorType, selectorExpression, ak, sk, pullBatchSize, useTLS);
         litePullConsumer.setEnableMsgTrace(consumerConfig.isEnableMsgTrace());
         litePullConsumer.setCustomizedTraceTopic(consumerConfig.getCustomizedTraceTopic());
-        if (StringUtils.hasText(consumerConfig.getNamespace())) {
-            litePullConsumer.setNamespace(consumerConfig.getNamespace());
-        }
-        litePullConsumer.setInstanceName(consumerConfig.getInstanceName());
-        log.info("a pull consumer({} sub {}) init on namesrv {}",  groupName, topicName, nameServer);
+        litePullConsumer.setNamespace(consumerConfig.getNamespace());
+        litePullConsumer.setHeartBeatHandler(consumerConfig.getHeartBeatListener());
         return litePullConsumer;
     }
 
