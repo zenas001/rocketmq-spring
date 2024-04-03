@@ -25,7 +25,9 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.spring.annotation.MessageModel;
 import org.apache.rocketmq.spring.annotation.SelectorType;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.apache.rocketmq.spring.support.RocketMQConsumerHeartBeatListener;
 import org.apache.rocketmq.spring.support.RocketMQMessageConverter;
+import org.apache.rocketmq.spring.support.RocketMQProducerHeartBeatListener;
 import org.apache.rocketmq.spring.support.RocketMQUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +57,8 @@ import javax.annotation.PostConstruct;
 @EnableConfigurationProperties(RocketMQProperties.class)
 @ConditionalOnClass({MQAdmin.class})
 @ConditionalOnProperty(prefix = "rocketmq", value = "name-server", matchIfMissing = true)
-@Import({MessageConverterConfiguration.class, ListenerContainerConfiguration.class, ExtProducerResetConfiguration.class, ExtConsumerResetConfiguration.class, RocketMQTransactionConfiguration.class})
+@Import({MessageConverterConfiguration.class, ListenerContainerConfiguration.class, ExtProducerResetConfiguration.class,
+        ExtConsumerResetConfiguration.class, RocketMQTransactionConfiguration.class})
 @AutoConfigureAfter({MessageConverterConfiguration.class})
 @AutoConfigureBefore({RocketMQTransactionConfiguration.class})
 
@@ -63,7 +66,7 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
     private static final Logger log = LoggerFactory.getLogger(RocketMQAutoConfiguration.class);
 
     public static final String ROCKETMQ_TEMPLATE_DEFAULT_GLOBAL_NAME =
-        "rocketMQTemplate";
+            "rocketMQTemplate";
     public static final String PRODUCER_BEAN_NAME = "defaultMQProducer";
     public static final String CONSUMER_BEAN_NAME = "defaultLitePullConsumer";
 
@@ -117,7 +120,8 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         producer.setRetryAnotherBrokerWhenNotStoreOK(producerConfig.isRetryNextServer());
         producer.setUseTLS(producerConfig.isTlsEnable());
         producer.setNamespace(producerConfig.getNamespace());
-        producer.setHeartBeatHandler(producerConfig.getHeartBeatHandler());
+        RocketMQProducerHeartBeatListener producerHeartBeatListener = this.applicationContext.getBean(RocketMQProducerHeartBeatListener.class);
+        producer.setHeartBeatHandler(producerHeartBeatListener);
         return producer;
     }
 
@@ -148,7 +152,8 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         litePullConsumer.setEnableMsgTrace(consumerConfig.isEnableMsgTrace());
         litePullConsumer.setCustomizedTraceTopic(consumerConfig.getCustomizedTraceTopic());
         litePullConsumer.setNamespace(consumerConfig.getNamespace());
-        litePullConsumer.setHeartBeatHandler(consumerConfig.getHeartBeatListener());
+        RocketMQConsumerHeartBeatListener consumerHeartBeatListener = this.applicationContext.getBean(RocketMQConsumerHeartBeatListener.class);
+        litePullConsumer.setHeartBeatHandler(consumerHeartBeatListener);
         return litePullConsumer;
     }
 
