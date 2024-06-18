@@ -18,8 +18,8 @@
 package org.apache.rocketmq.spring.autoconfigure;
 
 import org.apache.rocketmq.common.topic.TopicValidator;
-import org.apache.rocketmq.spring.support.RocketMQConsumerHeartBeatListener;
-import org.apache.rocketmq.spring.support.RocketMQProducerHeartBeatListener;
+import org.apache.rocketmq.spring.support.beat.RocketMQConsumerHeartBeatListener;
+import org.apache.rocketmq.spring.support.beat.RocketMQProducerHeartBeatListener;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.HashMap;

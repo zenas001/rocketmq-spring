@@ -25,9 +25,9 @@ import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.spring.annotation.MessageModel;
 import org.apache.rocketmq.spring.annotation.SelectorType;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.apache.rocketmq.spring.support.RocketMQConsumerHeartBeatListener;
+import org.apache.rocketmq.spring.support.beat.RocketMQConsumerHeartBeatListener;
 import org.apache.rocketmq.spring.support.RocketMQMessageConverter;
-import org.apache.rocketmq.spring.support.RocketMQProducerHeartBeatListener;
+import org.apache.rocketmq.spring.support.beat.RocketMQProducerHeartBeatListener;
 import org.apache.rocketmq.spring.support.RocketMQUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,6 +120,7 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         producer.setRetryAnotherBrokerWhenNotStoreOK(producerConfig.isRetryNextServer());
         producer.setUseTLS(producerConfig.isTlsEnable());
         producer.setNamespace(producerConfig.getNamespace());
+        //todo listen producer send beat  to broker
         RocketMQProducerHeartBeatListener producerHeartBeatListener = this.applicationContext.getBean(RocketMQProducerHeartBeatListener.class);
         producer.setHeartBeatHandler(producerHeartBeatListener);
         return producer;
@@ -152,6 +153,7 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         litePullConsumer.setEnableMsgTrace(consumerConfig.isEnableMsgTrace());
         litePullConsumer.setCustomizedTraceTopic(consumerConfig.getCustomizedTraceTopic());
         litePullConsumer.setNamespace(consumerConfig.getNamespace());
+        //todo listen pull consumer send beat  to broker
         RocketMQConsumerHeartBeatListener consumerHeartBeatListener = this.applicationContext.getBean(RocketMQConsumerHeartBeatListener.class);
         litePullConsumer.setHeartBeatHandler(consumerHeartBeatListener);
         return litePullConsumer;
