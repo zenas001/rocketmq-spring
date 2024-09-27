@@ -43,7 +43,6 @@ import org.apache.rocketmq.spring.annotation.SelectorType;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.apache.rocketmq.spring.core.RocketMQPushConsumerLifecycleListener;
 import org.apache.rocketmq.spring.core.RocketMQReplyListener;
-import org.apache.rocketmq.spring.support.beat.RocketMQConsumerHeartBeatListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.framework.AopProxyUtils;
@@ -679,8 +678,9 @@ public class DefaultRocketMQListenerContainer implements InitializingBean,
         //if String is not is equal "true" TLS mode will represent the as default value false
         consumer.setUseTLS(new Boolean(tlsEnable));
         //todo listen push consumer send beat  to broker
-        RocketMQConsumerHeartBeatListener rocketMQConsumerHeartBeatListener = applicationContext.getBean(RocketMQConsumerHeartBeatListener.class);
-        consumer.setHeartBeatHandler(rocketMQConsumerHeartBeatListener);
+        //pull consumer
+//        RocketMQConsumerHeartBeatListener rocketMQConsumerHeartBeatListener = applicationContext.getBean(RocketMQConsumerHeartBeatListener.class);
+//        consumer.setHeartBeatHandler(rocketMQConsumerHeartBeatListener);
         if (rocketMQListener instanceof RocketMQPushConsumerLifecycleListener) {
             ((RocketMQPushConsumerLifecycleListener) rocketMQListener).prepareStart(consumer);
         } else if (rocketMQReplyListener instanceof RocketMQPushConsumerLifecycleListener) {

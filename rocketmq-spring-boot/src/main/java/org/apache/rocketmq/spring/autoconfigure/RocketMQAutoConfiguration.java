@@ -121,8 +121,11 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         producer.setUseTLS(producerConfig.isTlsEnable());
         producer.setNamespace(producerConfig.getNamespace());
         //todo listen producer send beat  to broker
-        RocketMQProducerHeartBeatListener producerHeartBeatListener = this.applicationContext.getBean(RocketMQProducerHeartBeatListener.class);
-        producer.setHeartBeatHandler(producerHeartBeatListener);
+        if (rocketMQProperties.getProducer().getHeartBeatHandler() != null) {
+            RocketMQProducerHeartBeatListener producerHeartBeatListener =
+                    this.applicationContext.getBean(rocketMQProperties.getProducer().getHeartBeatHandler());
+            producer.setHeartBeatHandler(producerHeartBeatListener);
+        }
         return producer;
     }
 
@@ -154,8 +157,11 @@ public class RocketMQAutoConfiguration implements ApplicationContextAware {
         litePullConsumer.setCustomizedTraceTopic(consumerConfig.getCustomizedTraceTopic());
         litePullConsumer.setNamespace(consumerConfig.getNamespace());
         //todo listen pull consumer send beat  to broker
-        RocketMQConsumerHeartBeatListener consumerHeartBeatListener = this.applicationContext.getBean(RocketMQConsumerHeartBeatListener.class);
-        litePullConsumer.setHeartBeatHandler(consumerHeartBeatListener);
+        if (rocketMQProperties.getConsumer().getHeartBeatListener() != null) {
+            RocketMQConsumerHeartBeatListener consumerHeartBeatListener =
+                    this.applicationContext.getBean(rocketMQProperties.getConsumer().getHeartBeatListener());
+            litePullConsumer.setHeartBeatHandler(consumerHeartBeatListener);
+        }
         return litePullConsumer;
     }
 
